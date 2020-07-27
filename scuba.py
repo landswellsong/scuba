@@ -4,6 +4,7 @@ from subprocess import Popen, PIPE, call
 import json
 import os
 import sys
+import argparse
 
 # TODO: exceptions everywhere
 
@@ -51,12 +52,21 @@ def lookup_container(path):
             return container, rpath
     return None, None
 
+
+parser = argparse.ArgumentParser(description="Run a docker command in a container that mounts the current directory.")
+parser.add_argument('command', metavar="CMD", help = "Command to run")
+parser.add_argument('args', metavar="ARG", nargs=argparse.REMAINDER, help = "Command arguments")
+args = parser.parse_args()
+
 # TODO: no program to run etc arguments checks
 container, path = lookup_container(os.getcwd())
-if container and path:
+if container and path and args.command:
+    opts = []
     # TODO: shell expansion? (you won't be able to easily use them anyway tho)
+    opts += ['-w', path]
+    opts += ['-u', str(os.getuid())]
     # TODO: tty/interactive mode
-    call(['docker', 'exec', '-w', path, '-u', str(os.getuid()), container ] + sys.argv[1:])
+    call(['docker', 'exec'] +  opts + [ container, args.command ] + args.args)
 else:
     # TODO: stderr
     print("No container mounting path: '%s' is found. Forgot to start?" % os.getcwd())
