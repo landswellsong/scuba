@@ -55,6 +55,7 @@ def lookup_container(path):
 
 parser = argparse.ArgumentParser(description="Run a docker command in a container that mounts the current directory.")
 parser.add_argument('-s', '--superuser', action='store_true', help = "Run as superuser")
+parser.add_argument('-y', '--notty', action='store_true', help = "Disable interactive mode and don't allocate a TTY (-it options for docker)")
 parser.add_argument('command', metavar="CMD", help = "Command to run")
 parser.add_argument('args', metavar="ARG", nargs=argparse.REMAINDER, help = "Command arguments")
 args = parser.parse_args()
@@ -67,6 +68,8 @@ if container and path and args.command:
     opts += ['-w', path]
     if not args.superuser:
         opts += ['-u', '{}:{}'.format(os.getuid(), os.getgid())]
+    if not args.notty:
+        opts += ['-it']
     # TODO: tty/interactive mode
     call(['docker', 'exec'] +  opts + [ container, args.command ] + args.args)
 else:
