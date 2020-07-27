@@ -54,6 +54,7 @@ def lookup_container(path):
 
 
 parser = argparse.ArgumentParser(description="Run a docker command in a container that mounts the current directory.")
+parser.add_argument('-s', '--superuser', action='store_true', help = "Run as superuser")
 parser.add_argument('command', metavar="CMD", help = "Command to run")
 parser.add_argument('args', metavar="ARG", nargs=argparse.REMAINDER, help = "Command arguments")
 args = parser.parse_args()
@@ -64,7 +65,8 @@ if container and path and args.command:
     opts = []
     # TODO: shell expansion? (you won't be able to easily use them anyway tho)
     opts += ['-w', path]
-    opts += ['-u', str(os.getuid())]
+    if not args.superuser:
+        opts += ['-u', '{}:{}'.format(os.getuid(), os.getgid())]
     # TODO: tty/interactive mode
     call(['docker', 'exec'] +  opts + [ container, args.command ] + args.args)
 else:
